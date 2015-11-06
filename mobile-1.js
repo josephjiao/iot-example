@@ -63,7 +63,7 @@ thingShadows
   .on('connect', function() {
     console.log('connected to things instance, registering thing name');
 
-   thingShadows.register( 'RGBLedLamp', { ignoreDeltas: true,
+   thingShadows.register( 'MusicPlayer', { ignoreDeltas: true,
                                           persistentSubscribe: true } );
     var count=0;
     var rgbLedLampState = { };
@@ -80,10 +80,10 @@ thingShadows
        var clientToken;
  
       if (mobileAppOperation === 'update') {
-         clientToken = thingShadows[mobileAppOperation]('RGBLedLamp',
+         clientToken = thingShadows[mobileAppOperation]('MusicPlayer',
                                                         rgbLedLampState );
       } else {// mobileAppOperation === 'get'
-         clientToken = thingShadows[mobileAppOperation]('RGBLedLamp' );
+         clientToken = thingShadows[mobileAppOperation]('MusicPlayer' );
       }
       operationCallbacks[clientToken] = { operation: mobileAppOperation,
                                           cb: null };
@@ -115,12 +115,12 @@ thingShadows
 
 thingShadows.on('close', function() {
     console.log('close');
-    thingShadows.unregister( 'RGBLedLamp' );
+    thingShadows.unregister( 'MusicPlayer' );
   });
 
 thingShadows.on('reconnect', function() {
     console.log('reconnect');
-       thingShadows.register( 'RGBLedLamp', { ignoreDeltas: true,
+       thingShadows.register( 'MusicPlayer', { ignoreDeltas: true,
                                               persistentSubscribe: true } );
   });
 

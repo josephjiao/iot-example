@@ -47,7 +47,7 @@ var operationCallbacks = { };
 
 var role='DEVICE'; //mode = 2
 
-var rgbValues={ red: 0, green: 0, blue: 0 };
+var playerStatus={ red: 0, green: 0, blue: 0 };
 
 var mobileAppOperation='update';
 //
@@ -59,92 +59,80 @@ var mobileAppOperation='update';
 // will wait a random number of seconds and then change the LED lamp's values;
 // the LED lamp will synchronize with them upon receipt of an .../update/delta.
 //
-thingShadows
-  .on('connect', function() {
+thingShadows.on('connect', function() {
     console.log('connected to things instance, registering thing name');
 
-    thingShadows.register( 'RGBLedLamp' );
+    thingShadows.register( 'MusicPlayer' );
 
     var count=0;
-    var rgbLedLampState = { };
-
     var opFunction = function() {
+        var clientToken;
+        //
+        // The device gets the latest state from the thing shadow after connecting.
+        //
+        clientToken = thingShadows.get('MusicPlayer');
 
-       var clientToken;
-//
-// The device gets the latest state from the thing shadow after connecting.
-//
-      clientToken = thingShadows.get('RGBLedLamp');
-      operationCallbacks[clientToken] = { operation: 'get', cb: null };
-
-      operationCallbacks[clientToken].cb =
-         function( thingName, operation, statusType, stateObject ) { 
-
+        operationCallbacks[clientToken] = { operation: 'get', cb: null };
+        operationCallbacks[clientToken].cb = function( thingName, operation, statusType, stateObject ) { 
             console.log(role+':'+operation+' '+statusType+' on '+thingName+': '+
-                        JSON.stringify(stateObject));
-         };
+                JSON.stringify(stateObject));
+        };
     };
 
     opFunction();
-    });
+});
 
 thingShadows.on('close', function() {
     console.log('close');
-    thingShadows.unregister( 'RGBLedLamp' );
-  });
+    thingShadows.unregister( 'MusicPlayer' );
+});
 
 thingShadows.on('reconnect', function() {
     console.log('reconnect');
-       thingShadows.register( 'RGBLedLamp' );
-  });
+    thingShadows.register( 'MusicPlayer' );
+});
 
 thingShadows.on('offline', function() {
     console.log('offline');
-  });
+});
 thingShadows.on('error', function(error) {
     console.log('error', error);
-  });
+});
 thingShadows.on('message', function(topic, payload) {
     console.log('message', topic, payload.toString());
-  });
+});
 
 thingShadows.on('status', function(thingName, stat, clientToken, stateObject) {
-      if (!isUndefined( operationCallbacks[clientToken] ))
-      {
-         setTimeout( function() {
-         operationCallbacks[clientToken].cb( thingName, 
-              operationCallbacks[clientToken].operation,
-              stat,
-              stateObject );
+    if (!isUndefined( operationCallbacks[clientToken] )) {
+        if (stat === 'accepted'){
+            setTimeout( function() {
+                operationCallbacks[clientToken].cb( thingName, 
+                    operationCallbacks[clientToken].operation, stat, stateObject );
 
-         delete operationCallbacks[clientToken];
-         }, 2000 );
-      } else {
-         console.warn( 'status:unknown clientToken \''+clientToken+'\' on \''+
-                       thingName+'\'' );
-      }
-  });
+                delete operationCallbacks[clientToken];
+            }, 1000 );
+        }else{
+            console.warn( 'not accepted-status:'+stat);
+        }
+    } else {
+        console.warn( 'status:unknown clientToken \''+clientToken+'\' on \''+ thingName+'\'' );
+    }
+});
 
 thingShadows.on('delta', function(thingName, stateObject) {
-     console.log(role+':delta on '+thingName+': '+
-                 JSON.stringify(stateObject));
-     rgbValues=stateObject.state;
+     console.log(role+':delta on '+thingName+': '+ JSON.stringify(stateObject));
+     playerStatus=stateObject.state;
+     //TODO: get desired state, sync on local    
  });
 
 thingShadows.on('timeout', function(thingName, clientToken) {
-      if (!isUndefined( operationCallbacks[clientToken] ))
-      {
-         operationCallbacks[clientToken].cb( thingName,
-              operationCallbacks[clientToken].operation,
-              'timeout',
-              { } );
-         delete operationCallbacks[clientToken];
-      }
-      else
-      {
-         console.warn( 'timeout:unknown clientToken \''+clientToken+'\' on \''+
-                       thingName+'\'' );
-      }
+    if (!isUndefined( operationCallbacks[clientToken] )) {
+        operationCallbacks[clientToken].cb( thingName, operationCallbacks[clientToken].operation, 'timeout', { } );
+        delete operationCallbacks[clientToken];
+    } else {
+        console.warn( 'timeout:unknown clientToken \''+clientToken+'\' on \''+
+            thingName+'\'' );
+    }
 });
 
 }
