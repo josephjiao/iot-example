@@ -74,12 +74,16 @@ thingShadows.on('connect', function() {
 
         operationCallbacks[clientToken] = { operation: 'get', cb: null };
         operationCallbacks[clientToken].cb = function( thingName, operation, statusType, stateObject ) { 
-            console.log(role+':'+operation+' '+statusType+' on '+thingName+': '+
-                JSON.stringify(stateObject));
+            console.log(role+':'+operation+' '+statusType+' on '+thingName+': '+ JSON.stringify(stateObject));
+            //TODO sync local, init status
+             console.log('sync local');
         };
     };
 
-    opFunction();
+    setTimeout( function() {
+        opFunction();
+    }, 2000 );
+ 
 });
 
 thingShadows.on('close', function() {
@@ -103,6 +107,7 @@ thingShadows.on('message', function(topic, payload) {
 });
 
 thingShadows.on('status', function(thingName, stat, clientToken, stateObject) {
+    console.log('status.. triggered');
     if (!isUndefined( operationCallbacks[clientToken] )) {
         if (stat === 'accepted'){
             setTimeout( function() {
@@ -123,9 +128,12 @@ thingShadows.on('delta', function(thingName, stateObject) {
      console.log(role+':delta on '+thingName+': '+ JSON.stringify(stateObject));
      playerStatus=stateObject.state;
      //TODO: get desired state, sync on local    
+     console.log('sync local');
  });
 
 thingShadows.on('timeout', function(thingName, clientToken) {
+
+    console.log('timeout.. triggered');
     if (!isUndefined( operationCallbacks[clientToken] )) {
         operationCallbacks[clientToken].cb( thingName, operationCallbacks[clientToken].operation, 'timeout', { } );
         delete operationCallbacks[clientToken];
@@ -134,6 +142,14 @@ thingShadows.on('timeout', function(thingName, clientToken) {
             thingName+'\'' );
     }
 });
+
+
+//setInterval( function() {
+//    //TODO, reported status
+//    opClientToken = thingShadows.update('TemperatureStatus', { state: { desired: deviceMonitorState } });
+//}, 3000 );
+//
+//thingShadows.delete('MusicPlayer');
 
 }
 
