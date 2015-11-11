@@ -21,6 +21,9 @@
 const thingShadow = require('..').thingShadow;
 const isUndefined = require('../common/lib/is-undefined');
 const cmdLineProcess   = require('./lib/cmdline');
+var fs = require('fs');
+var Mpg = require('mpg123');
+const mp3Dir = '/tmp/mp3/banhusha.mp3'
 
 //begin module
 
@@ -40,6 +43,36 @@ const thingShadows = thingShadow({
   reconnectPeriod: args.reconnectPeriod,
 });
 
+//init player
+var player = new Mpg().loadpaused(mp3Dir);
+var playerStatus={ status: 'pause',songName: 'unknown'};
+
+function updatePlayerStatusFile(status){
+    playerStatus.status = status;
+    fs.writeFile("/tmp/playerStatus", status,function(err) {
+        if(err) {
+            return console.log(err);
+        }
+    }); 
+}
+
+
+player.on('end',function(){
+    updatePlayerStatusFile('end');
+});
+
+player.on('stop',function(){
+    updatePlayerStatusFile('stopped');
+});
+
+player.on('resume',function(){
+    updatePlayerStatusFile('playing');
+});
+
+player.on('pause',function(){
+    updatePlayerStatusFile('pause');
+});
+
 //
 // Track operations in here using clientTokens as indices.
 //
@@ -47,7 +80,6 @@ var operationCallbacks = { };
 
 var role='DEVICE'; //mode = 2
 
-var playerStatus={ red: 0, green: 0, blue: 0 };
 
 var mobileAppOperation='update';
 //
@@ -75,8 +107,9 @@ thingShadows.on('connect', function() {
         operationCallbacks[clientToken] = { operation: 'get', cb: null };
         operationCallbacks[clientToken].cb = function( thingName, operation, statusType, stateObject ) { 
             console.log(role+':'+operation+' '+statusType+' on '+thingName+': '+ JSON.stringify(stateObject));
-            //TODO sync local, init status
-             console.log('sync local');
+            if( stateObject.desired.status != playerStatus.status){
+                player.pause();
+            }
         };
     };
 
@@ -107,7 +140,7 @@ thingShadows.on('message', function(topic, payload) {
 });
 
 thingShadows.on('status', function(thingName, stat, clientToken, stateObject) {
-    console.log('status.. triggered');
+    console.log('status()...... triggered');
     if (!isUndefined( operationCallbacks[clientToken] )) {
         if (stat === 'accepted'){
             setTimeout( function() {
@@ -127,8 +160,10 @@ thingShadows.on('status', function(thingName, stat, clientToken, stateObject) {
 thingShadows.on('delta', function(thingName, stateObject) {
      console.log(role+':delta on '+thingName+': '+ JSON.stringify(stateObject));
      playerStatus=stateObject.state;
-     //TODO: get desired state, sync on local    
-     console.log('sync local');
+     if( stateObject.desired.status != playerStatus.status){
+         player.pause();
+     }
+     console.log('sync local for delta');
  });
 
 thingShadows.on('timeout', function(thingName, clientToken) {
@@ -143,13 +178,17 @@ thingShadows.on('timeout', function(thingName, clientToken) {
     }
 });
 
+//report player's status every 5s 
+setInterval( function() {
+    opClientToken = thingShadows.update('MusicPlayer', { state: { reported: playerStatus} });
+    console.log('Report status.. '+ JSON.stringify(playerStatus));
+    operationCallbacks[opClientToken] = { operation: 'update', cb: null };
+    operationCallbacks[opClientToken].cb = function( thingName, operation, statusType, stateObject ) { 
+        console.log('Report accepted');
+    };
+}, 5000 );
 
-//setInterval( function() {
-//    //TODO, reported status
-//    opClientToken = thingShadows.update('TemperatureStatus', { state: { desired: deviceMonitorState } });
-//}, 3000 );
-//
-//thingShadows.delete('MusicPlayer');
+thingShadows.delete('MusicPlayer');
 
 }
 
