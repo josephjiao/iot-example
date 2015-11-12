@@ -23,7 +23,7 @@ const isUndefined = require('../common/lib/is-undefined');
 const cmdLineProcess   = require('./lib/cmdline');
 var fs = require('fs');
 var Mpg = require('mpg123');
-const mp3Dir = '/tmp/mp3/banhusha.mp3'
+const mp3Dir = '/tmp/mp3/banhusha.mp3';
 
 //begin module
 
@@ -44,10 +44,11 @@ const thingShadows = thingShadow({
 });
 
 //init player
-var player = new Mpg().loadpaused(mp3Dir);
+var player = new Mpg().loadpause(mp3Dir);
 var playerStatus={ status: 'pause',songName: 'unknown'};
 
 function updatePlayerStatusFile(status){
+    console.log('ToUpdate Status:'+ status);
     playerStatus.status = status;
     fs.writeFile("/tmp/playerStatus", status,function(err) {
         if(err) {
@@ -66,10 +67,16 @@ player.on('stop',function(){
 });
 
 player.on('resume',function(){
+    console.log('onResume');
     updatePlayerStatusFile('playing');
 });
 
+player.on('error',function(){
+    console.log('onError');
+});
+
 player.on('pause',function(){
+    console.log('onPause');
     updatePlayerStatusFile('pause');
 });
 
@@ -107,7 +114,8 @@ thingShadows.on('connect', function() {
         operationCallbacks[clientToken] = { operation: 'get', cb: null };
         operationCallbacks[clientToken].cb = function( thingName, operation, statusType, stateObject ) { 
             console.log(role+':'+operation+' '+statusType+' on '+thingName+': '+ JSON.stringify(stateObject));
-            if( stateObject.desired.status != playerStatus.status){
+            if( stateObject.state.desired.status != playerStatus.status){
+                console.log('try to init status to :'+ stateObject.state.desired.status);
                 player.pause();
             }
         };
@@ -160,10 +168,10 @@ thingShadows.on('status', function(thingName, stat, clientToken, stateObject) {
 thingShadows.on('delta', function(thingName, stateObject) {
      console.log(role+':delta on '+thingName+': '+ JSON.stringify(stateObject));
      playerStatus=stateObject.state;
-     if( stateObject.desired.status != playerStatus.status){
+     if( stateObject.status != playerStatus.status){
+         console.log('sync local for delta');
          player.pause();
      }
-     console.log('sync local for delta');
  });
 
 thingShadows.on('timeout', function(thingName, clientToken) {
