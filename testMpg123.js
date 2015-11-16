@@ -1,6 +1,6 @@
 var Mpg = require('mpg123');
 
-var filename = '/tmp/mp3/253.mp3';
+var filename = '~/mp3/253.mp3';
 var player = new Mpg().play(filename);
 
 console.log('test');
@@ -18,14 +18,29 @@ player.on('resume',function(){
 setTimeout( function() {
     player = player.pause();
     console.log('pause');
-}, 10000 );
+}, 5000 );
 
 setTimeout( function() {
     player.pause();
     console.log('play');
-}, 15000 );
-//
-//setTimeout( function() {
-//    newPlayer.pause();
-//    console.log('pause');
-//}, 20000 );
+}, 10000 );
+
+unction exitHandler(options, err) {
+    if (options.cleanup) console.log('clean');
+    if (err) console.log(err.stack);
+    if (options.exit) process.exit();
+}
+
+//do something when app is closing
+process.on('exit', exitHandler.bind(null,{cleanup:true}));
+
+//catches ctrl+c event
+process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+
+//catches uncaught exceptions
+process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
+
+setTimeout( function() {
+    newPlayer.pause();
+    console.log('pause');
+}, 20000 );

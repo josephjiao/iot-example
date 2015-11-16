@@ -23,7 +23,7 @@ const isUndefined = require('../common/lib/is-undefined');
 const cmdLineProcess   = require('./lib/cmdline');
 var fs = require('fs');
 var Mpg = require('mpg123');
-const mp3Dir = '/tmp/mp3/banhusha.mp3';
+const mp3Dir = '~/mp3/banhusha.mp3';
 
 //begin module
 
