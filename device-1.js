@@ -173,9 +173,9 @@ thingShadows.on('status', function(thingName, stat, clientToken, stateObject) {
 
 thingShadows.on('delta', function(thingName, stateObject) {
     console.log(role+':delta on '+thingName+': '+ JSON.stringify(stateObject));
-    if (stateObject.status in ALLOW_STATUS){
+    if (stateObject.state.status in ALLOW_STATUS){
         playerStatus=stateObject.state;
-        if( stateObject.status != playerStatus.status){
+        if( stateObject.state.status != playerStatus.status){
             console.log('sync local for delta');
             player.pause();
         }
