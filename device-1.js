@@ -18,12 +18,14 @@
 //npm deps
 
 //app deps
+const ALLOW_STATUS=['playing','pause'];
 const thingShadow = require('..').thingShadow;
 const isUndefined = require('../common/lib/is-undefined');
 const cmdLineProcess   = require('./lib/cmdline');
 var fs = require('fs');
 var Mpg = require('mpg123');
-const mp3Dir = '~/mp3/banhusha.mp3';
+const mp3Dir = '/home/root/mp3/banhusha.mp3';
+
 
 //begin module
 
@@ -114,7 +116,7 @@ thingShadows.on('connect', function() {
         operationCallbacks[clientToken] = { operation: 'get', cb: null };
         operationCallbacks[clientToken].cb = function( thingName, operation, statusType, stateObject ) { 
             console.log(role+':'+operation+' '+statusType+' on '+thingName+': '+ JSON.stringify(stateObject));
-            if( stateObject.state.desired.status != playerStatus.status){
+            if( stateObject.state.desired.status != playerStatus.status && stateObject.state.desired.status in ALLOW_STATUS ){
                 console.log('try to init status to :'+ stateObject.state.desired.status);
                 player.pause();
             }
@@ -166,16 +168,19 @@ thingShadows.on('status', function(thingName, stat, clientToken, stateObject) {
 });
 
 thingShadows.on('delta', function(thingName, stateObject) {
-     console.log(role+':delta on '+thingName+': '+ JSON.stringify(stateObject));
-     playerStatus=stateObject.state;
-     if( stateObject.status != playerStatus.status){
-         console.log('sync local for delta');
-         player.pause();
-     }
- });
+    console.log(role+':delta on '+thingName+': '+ JSON.stringify(stateObject));
+    if (stateObject.status in ALLOW_STATUS){
+        playerStatus=stateObject.state;
+        if( stateObject.status != playerStatus.status){
+            console.log('sync local for delta');
+            player.pause();
+        }
+    }else{
+        console.log('delta ignored');
+    }
+});
 
 thingShadows.on('timeout', function(thingName, clientToken) {
-
     console.log('timeout.. triggered');
     if (!isUndefined( operationCallbacks[clientToken] )) {
         operationCallbacks[clientToken].cb( thingName, operationCallbacks[clientToken].operation, 'timeout', { } );
