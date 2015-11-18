@@ -116,9 +116,13 @@ thingShadows.on('connect', function() {
         operationCallbacks[clientToken] = { operation: 'get', cb: null };
         operationCallbacks[clientToken].cb = function( thingName, operation, statusType, stateObject ) { 
             console.log(role+':'+operation+' '+statusType+' on '+thingName+': '+ JSON.stringify(stateObject));
-            if( stateObject.state.desired.status != playerStatus.status && stateObject.state.desired.status in ALLOW_STATUS ){
-                console.log('try to init status to :'+ stateObject.state.desired.status);
-                player.pause();
+            //handle timeout
+            if (statusType === 'accepted'){
+                if( stateObject.state.desired.status != playerStatus.status && stateObject.state.desired.status in ALLOW_STATUS ){
+                    console.log('try to init status to :'+ stateObject.state.desired.status);
+                    player.pause();
+                }
+            }else if (statusType === 'timeout'){
             }
         };
     };
