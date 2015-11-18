@@ -118,7 +118,7 @@ thingShadows.on('connect', function() {
             console.log(role+':'+operation+' '+statusType+' on '+thingName+': '+ JSON.stringify(stateObject));
             //handle timeout
             if (statusType === 'accepted'){
-                if( stateObject.state.desired.status != playerStatus.status && stateObject.state.desired.status in ALLOW_STATUS ){
+                if( stateObject.state.desired.status !== playerStatus.status && ALLOW_STATUS.indexOf(stateObject.state.desired.status) > -1 ){
                     console.log('try to init status to :'+ stateObject.state.desired.status);
                     player.pause();
                 }
@@ -174,8 +174,9 @@ thingShadows.on('status', function(thingName, stat, clientToken, stateObject) {
 thingShadows.on('delta', function(thingName, stateObject) {
     console.log(role+':delta on '+thingName+': '+ JSON.stringify(stateObject));
     if ( ALLOW_STATUS.indexOf(stateObject.state.status) > -1 ){
-        playerStatus=stateObject.state;
-        if( stateObject.state.status != playerStatus.status){
+        console.log('delta valid');
+        if( stateObject.state.status !== playerStatus.status){
+            playerStatus=stateObject.state;
             console.log('sync local for delta');
             player.pause();
         }
