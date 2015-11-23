@@ -24,7 +24,8 @@ const isUndefined = require('../common/lib/is-undefined');
 const cmdLineProcess   = require('./lib/cmdline');
 var fs = require('fs');
 var Mpg = require('mpg123');
-const mp3Dir = '/home/root/mp3/banhusha.mp3';
+//const mp3Dir = '/home/root/mp3/banhusha.mp3';
+const mp3Dir = '/Users/jiaoyj/mp3/banhusha.mp3';
 
 
 //begin module
@@ -61,7 +62,8 @@ function updatePlayerStatusFile(status){
 
 
 player.on('end',function(){
-    updatePlayerStatusFile('end');
+    player.play(mp3Dir);
+    console.log('playing a song is end');
 });
 
 player.on('stop',function(){
